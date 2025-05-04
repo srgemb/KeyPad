@@ -20,15 +20,15 @@
 #ifdef FW_DEBUG
     #define FW_VERSION_MAJOR   0
     #define FW_VERSION_MINOR   0
-    #define FW_VERSION_BUILD   36
+    #define FW_VERSION_BUILD   44
     #define FW_VERSION_RC      'D'
 
-    #define FW_TIME_HOUR       14
-    #define FW_TIME_MINUTES    20
-    #define FW_TIME_SECONDS    52
+    #define FW_TIME_HOUR       18
+    #define FW_TIME_MINUTES    1
+    #define FW_TIME_SECONDS    18
 
-    #define FW_DATE_DAY        7
-    #define FW_DATE_MONTH      4
+    #define FW_DATE_DAY        3
+    #define FW_DATE_MONTH      5
     #define FW_DATE_YEAR       2025
 #endif
 
@@ -50,15 +50,15 @@
 #ifdef FW_RELEASE
     #define FW_VERSION_MAJOR   0
     #define FW_VERSION_MINOR   0
-    #define FW_VERSION_BUILD   14
+    #define FW_VERSION_BUILD   18
     #define FW_VERSION_RC      'R'
 
-    #define FW_TIME_HOUR       14
-    #define FW_TIME_MINUTES    21
-    #define FW_TIME_SECONDS    0
+    #define FW_TIME_HOUR       17
+    #define FW_TIME_MINUTES    31
+    #define FW_TIME_SECONDS    54
 
-    #define FW_DATE_DAY        7
-    #define FW_DATE_MONTH      4
+    #define FW_DATE_DAY        3
+    #define FW_DATE_MONTH      5
     #define FW_DATE_YEAR       2025
 #endif
 

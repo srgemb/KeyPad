@@ -44,11 +44,10 @@ int main( void ) {
     reset_flg = ( RCC->CSR >>= 26 );
     RCC_ClearFlag();
 
-    //конфигурирование пинов JTAG (PB3, PB15) -> off
-    GPIO_AFConfigure( AFIO_SWJ_JTAG_NO_SW );
-
-    //установка частоты шины APB2 (EXTI, GPIO, TIM1, SPI1, USART1)
-    RCC_PCLK2Config( RCC_HCLK_Div16 );
+    //APB1: DAC, PWR, BKP, CAN, USB, I2C, UART2,3,4,5, SPI2,3, IWGD, WWDG, TIM2-7
+    //установка частоты шины APB2 = 72 000 000/2 = 36 000 000 
+    //APB2: EXTI, GPIO, TIM1/8, SPI1, ADC, USART1
+    RCC_PCLK2Config( RCC_HCLK_Div2 );
 
     //Установка группы приоритетов
     //4 bits for pre-emption priority
