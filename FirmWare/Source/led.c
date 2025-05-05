@@ -46,12 +46,12 @@ osEventFlagsId_t beep_event = NULL;
 
 //Параметры конфигурирования портов вывода для управления индикаторами
 static const GPIO_Config pin_led[] = {
-    { LED_ALPHA, GPIOB, PIN_3,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT2MHZ, PIN_HIGH },
-    { LED_ALT,   GPIOB, PIN_4,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT2MHZ, PIN_HIGH },
-    { LED_SHIFT, GPIOB, PIN_5,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT2MHZ, PIN_HIGH },
-    { LED_CTRL,  GPIOB, PIN_6,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT2MHZ, PIN_HIGH },
-    { LED_CHK,   GPIOB, PIN_7,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT2MHZ, PIN_LOW },
-    { BEEP,      GPIOA, PIN_11, GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT2MHZ, PIN_LOW }
+    { LED_ALPHA, GPIOB, PIN_3,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT10MHZ, PIN_HIGH },
+    { LED_ALT,   GPIOB, PIN_4,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT10MHZ, PIN_HIGH },
+    { LED_SHIFT, GPIOB, PIN_5,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT10MHZ, PIN_HIGH },
+    { LED_CTRL,  GPIOB, PIN_6,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT10MHZ, PIN_HIGH },
+    { LED_CHK,   GPIOB, PIN_7,  GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT10MHZ, PIN_LOW },
+    { BEEP,      GPIOA, PIN_11, GPIO_OUT_PUSH_PULL, GPIO_MODE_OUT10MHZ, PIN_LOW }
  };
 
 //*************************************************************************************************
@@ -99,6 +99,8 @@ static void LedSpeed( void );
 //*************************************************************************************************
 void LedInit( void ) {
 
+    //конфигурирование пинов JTAG-DP Disabled and SW-DP Enabled (PB3, PB4, PA15) -> free
+    GPIO_AFConfigure( AFIO_SWJ_JTAG_NO_SW );
     //инициализация выходов
     PinInit( pin_led, SIZE_ARRAY( pin_led ) );
     //таймер длительности звукового сигнала
