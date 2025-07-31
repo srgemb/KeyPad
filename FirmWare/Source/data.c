@@ -18,6 +18,7 @@
 
 #include "data.h"
 #include "key.h"
+#include "key_def.h"
 #include "config.h"
 #include "events.h"
 #include "button.h"
@@ -149,9 +150,9 @@ static void TaskUart( void *argument ) {
         event = osEventFlagsWait( data_event, EVN_UART_MASK, osFlagsWaitAny, osWaitForever );
         if ( event > 0 && event & EVN_UART_START2 ) {
             exec = (ExecResult)( event & EVN_MASK_RESULT );
-            if ( exec == EXEC_OK )
-                DataSendStr( (char *)msg_data_ok );
-            else DataSendStr( (char *)msg_data_err );
+            if ( exec != EXEC_OK )
+                DataSendStr( (char *)msg_data_err );
+            //DataSendStr( (char *)msg_data_ok );
             //команда выполнена, возобновляем прием команд по UART2
             recv_ind = 0;
             memset( recv_buff, 0x00, sizeof( recv_buff ) );
@@ -171,15 +172,14 @@ static void CallBackUsart( uint32_t event ) {
             recv_ind = 0;
             memset( recv_buff, 0x00, sizeof( recv_buff ) );
            }
-        recv_buff[recv_ind++] = recv_ch;
         //проверим последний принятый байт, если CR - обработка команды
-        if ( recv_buff[recv_ind - 1] == KEY_CR ) {
-            recv_buff[recv_ind - 1] = 0x00; //уберем код CR
+        if ( recv_ch == KEY_CR ) {
             //выполнение команды в TaskCommand()
             osEventFlagsSet( cmnd_event, EVN_CMND_DATA );
             return; //не выполняем запуск приема по UART2
            }
         //продолжаем прием
+        recv_buff[recv_ind++] = recv_ch;
         USARTdrv->Receive( &recv_ch, 1 );
        }
     if ( event & ARM_USART_EVENT_TX_COMPLETE ) {
@@ -214,22 +214,25 @@ void DataSend( uint8_t data, uint8_t alt_key ) {
     if ( ( data == KEY_F1 || data == KEY_F2 || data == KEY_F3 || data == KEY_F4 || data == KEY_F5 || 
          data == KEY_F6 || data == KEY_F7 || data == KEY_F8 || data == KEY_F9 || data == KEY_F10 ) && 
          ( alt_key & KEY_ALT || alt_key & KEY_CTRL ) ) {
-        if ( alt_key == KEY_ALT ) {
+        if ( alt_key == KEY_ALT && strlen( config.macro_alt[data & 0x0F] ) ) {
+            //передача данных макроса ALT + Fn
             DataSendStr( config.macro_alt[data & 0x0F] );
             DataSendStr( (char *)msg_crlr );
            }
-        if ( alt_key == KEY_CTRL ) {
+        if ( alt_key == KEY_CTRL && strlen( config.macro_alt[data & 0x0F] ) ) {
+            //передача данных макроса CTRL + Fn
             DataSendStr( config.macro_ctrl[data & 0x0F] );
             DataSendStr( (char *)msg_crlr );
            }
        }
     else {
         memset( str, 0x00, sizeof( str ) );
-        if ( data == KEY_CR ) {
+        /*if ( data == KEY_CR ) {
             str[0] = KEY_CR;
             str[1] = KEY_LF;
            }
-        else str[0] = data;
+        else*/
+        str[0] = data;
         DataSendStr( str );
        }
  }

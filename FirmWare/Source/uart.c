@@ -16,6 +16,8 @@
 
 #include "driver_usart.h"
 
+#include "key.h"
+#include "key_def.h"
 #include "uart.h"
 #include "events.h"
 
@@ -27,7 +29,6 @@
 
 #define KEY_BACKSPACE       0x08            //удаление символа
 #define KEY_ESC_CMD         0x1B            //код префикса команды ESC
-#define KEY_CR              0x0D            //код '\r'
 
 //*************************************************************************************************
 // Внешние переменные
@@ -163,14 +164,13 @@ static void CallBackUsart( uint32_t event ) {
             USARTdrv->Receive( &recv_ch, 1 );
             return;
            }
-        recv_buff[recv_ind++] = recv_ch;
-        //проверим последний принятый байт, если CR - обработка команды
-        if ( recv_buff[recv_ind - 1] == KEY_CR ) {
-            recv_buff[recv_ind - 1] = 0x00; //уберем код CR
+        //проверим получения CR - обработка команды
+        if ( recv_ch == KEY_CR ) {
             //выполнение команды в TaskCommand()
             osEventFlagsSet( cmnd_event, EVN_CMND_EXEC );
             return; //не выполняем запуск приема по UART1
            }
+        recv_buff[recv_ind++] = recv_ch;
         //продолжаем прием
         USARTdrv->Receive( &recv_ch, 1 );
        }

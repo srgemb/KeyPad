@@ -27,13 +27,17 @@ const char msg_no_command[] = "\r\nUnknown command";
 const char msg_str_delim[]  = "----------------------------------------------------\r\n";
 const char msg_err_param[]  = "\r\nInvalid parameters\r\n";
 
-const char msg_data_ok[]    = "\r\nOK\r\n";
-const char msg_data_err[]   = "\r\nERROR\r\n";
+const char msg_data_ok[]    = "OK\r";
+const char msg_data_err[]   = "ERROR\r";
+
+const char msg_mac_ok[]    = "#OK\r";
+const char msg_mac_err[]   = "#ERROR\r";
 
 const char msg_read_par[]   = "Reading parameters: ... %s\r\n";
 const char msg_save_par[]   = "Saving parameters: ... %s\r\n";
 
 const char msg_ok[]         = "OK\r\n";
+const char msg_error[]      = "ERROR\r\n";
 
 static char * const reset_desc[] = { "PINRST ", "PORRST ", "SFTRST ", "IWDGRST ", "WWDGRST ", "LPWRRST " };
 

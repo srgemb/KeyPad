@@ -24,11 +24,11 @@
 //*************************************************************************************************
 // Локальные переменные
 //*************************************************************************************************
-const uint8_t  fw_type[4] __attribute__((section(".ARM.__at_0x08000200" ))) = "KPAD";
-const uint32_t fw_version __attribute__((section(".ARM.__at_0x08000204" ))) = FW_VERSION;
-const uint32_t fw_date    __attribute__((section(".ARM.__at_0x08000208" ))) = FW_DATE;
-const uint32_t fw_time    __attribute__((section(".ARM.__at_0x0800020C" ))) = FW_TIME;
-const uint32_t fw_crc     __attribute__((section(".ARM.__at_0x08000210" ))) = 0x00000000;
+const uint8_t  fw_type[4] __attribute__( ( section( ".ARM.__at_0x08000200" ) ) ) = "KPAD";
+const uint32_t fw_version __attribute__( ( section( ".ARM.__at_0x08000204" ) ) ) = FW_VERSION;
+const uint32_t fw_date    __attribute__( ( section( ".ARM.__at_0x08000208" ) ) ) = FW_DATE;
+const uint32_t fw_time    __attribute__( ( section( ".ARM.__at_0x0800020C" ) ) ) = FW_TIME;
+const uint32_t fw_crc     __attribute__( ( section( ".ARM.__at_0x08000210" ) ) ) = 0x00000000;
 
 static char val_ver[32], val_date[14], val_time[12];
 

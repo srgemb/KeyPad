@@ -17,6 +17,7 @@
 #include "driver_usart.h"
 
 #include "key.h"
+#include "key_def.h"
 #include "data.h"
 #include "events.h"
 #include "button.h"

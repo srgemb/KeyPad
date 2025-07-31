@@ -17,6 +17,7 @@
 
 #include "led.h"
 #include "key.h"
+#include "key_def.h"
 #include "main.h"
 #include "data.h"
 #include "ports.h"

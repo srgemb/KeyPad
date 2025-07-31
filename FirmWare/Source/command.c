@@ -79,10 +79,12 @@ static void CmndHelp( uint8_t cnt_par );
 static void CmndReset( uint8_t cnt_par );
 static void CmndTask( uint8_t cnt_par );
 static void CmndUart( uint8_t cnt_par );
+static void CmndMacro( uint8_t cnt_par );
 static void CmndMacroCtrl( uint8_t cnt_par );
 static void CmndMacroAlt( uint8_t cnt_par );
 static void CmndConfig( uint8_t cnt_par );
 static void CmndVersion( uint8_t cnt_par );
+static void CmndFirmWare( uint8_t cnt_par );
 
 #ifdef FW_RELEASE
 static void CmndWdt( uint8_t cnt_par );
@@ -100,10 +102,11 @@ static const char *help = {
     "mctrl 1-10 \"...\" [save] - Defining a macro for the CTRL keys (with saving)\r\n"
     "malt  1-10 \"...\" [save] - Defining a macro for the ALT keys (with saving)\r\n"
     "config                  - Outputting a set of macros\r\n"
+    "macro [save]            - Outputting a set of macros (with saving)\r\n"
     #ifdef FW_RELEASE
-    "wdt                       - Forced stop WDT timer\r\n"
+    "wdt                     - Forced stop WDT timer\r\n"
     #endif
-    "?       - Help.\r\n"
+    "?                       - Help.\r\n"
   };
 
 //Перечень доступных команд
@@ -114,7 +117,9 @@ static const CMD cmd[] = {
     { "mctrl",          CmndMacroCtrl },
     { "malt",           CmndMacroAlt },
     { "config",         CmndConfig },
+    { "macro",          CmndMacro },
     { "version",        CmndVersion },
+    { "firmware",       CmndFirmWare },
     #ifdef FW_RELEASE
     { "wdt",            CmndWdt },
     #endif
@@ -148,6 +153,7 @@ static void TaskCommand( void *argument ) {
             UartSendStr( (char *)msg_crlr );
             sprintf( buffer, msg_read_par, FlashDescErr( flash_status ) );
             UartSendStr( buffer );
+            //версия прошивки
             CmndVersion( 0 );
             UartSendStr( (char *)msg_prompt );
            }
@@ -264,41 +270,44 @@ static void CmndUart( uint8_t cnt_par ) {
  }
 
 //*************************************************************************************************
-// Сохранение макроса
+// Вывод списка макросов, сохранение макросов в FLASH памяти
 //-------------------------------------------------------------------------------------------------
 // uint8_t cnt_par - кол-во параметров
 //*************************************************************************************************
-static void CmndMacroCtrl( uint8_t cnt_par ) {
+static void CmndMacro( uint8_t cnt_par ) {
 
-    uint8_t id;
+    uint8_t i;
     uint32_t stat;
     
-    //проверка кол-ва параметров
     if ( cnt_par < 2 ) {
-        UartSendStr( (char *)msg_err_param );
+        //вывод значений макросов
+        for ( i = 0; i < MACROS_CNT; i++ ) {
+            sprintf( buffer, "Macro  ALT F%u: \"%s\"\r\n", i + 1, config.macro_alt[i] );
+            UartSendStr( buffer );
+           }
+        UartSendStr( (char *)msg_crlr );
+        for ( i = 0; i < MACROS_CNT; i++ ) {
+            sprintf( buffer, "Macro CTRL F%u: \"%s\"\r\n", i + 1, config.macro_ctrl[i] );
+            UartSendStr( buffer );
+           }
         return;
        }
-    //проверка на допустимое значение индекса макроса
-    id = atoi( GetParamVal( IND_PARAM1 ) );
-    if ( !id || id > MACROS_CNT ) {
-        UartSendStr( (char *)msg_err_param );
-        return;
+    if ( cnt_par == 2 ) {
+        //сохранение маскросов
+        if ( strcasecmp( GetParamVal( IND_PARAM1 ), "save" ) == 0 ) {
+            stat = ConfigSave();
+            sprintf( buffer, msg_save_par, FlashDescErr( stat ) );
+            UartSendStr( buffer );
+            if ( stat == FLASH_COMPLETE ) 
+                DataSendStr( (char *)msg_mac_ok );
+            else DataSendStr( (char *)msg_mac_err );
+           }
+        else UartSendStr( (char *)msg_err_param );
        }
-    id--;
-    memset( config.macro_ctrl[id], 0x00, sizeof( config.macro_ctrl[id] ) );
-    if ( strlen( GetParamVal( IND_PARAM2 ) ) )
-        strcpy( config.macro_ctrl[id], GetParamVal( IND_PARAM2 ) );
-    //сохранение параметра
-    if ( strcasecmp( GetParamVal( IND_PARAM3 ), "save" ) == 0 ) {
-        stat = ConfigSave();
-        sprintf( buffer, msg_save_par, FlashDescErr( stat ) );
-        UartSendStr( buffer );
-       }
-    else UartSendStr( (char *)msg_ok );
  }
 
 //*************************************************************************************************
-// Сохранение макроса
+// Сохранение макроса ALT + Fn
 //-------------------------------------------------------------------------------------------------
 // uint8_t cnt_par - кол-во параметров
 //*************************************************************************************************
@@ -316,19 +325,79 @@ static void CmndMacroAlt( uint8_t cnt_par ) {
     id = atoi( GetParamVal( IND_PARAM1 ) );
     if ( !id || id > MACROS_CNT ) {
         UartSendStr( (char *)msg_err_param );
+        DataSendStr( (char *)msg_mac_err );
         return;
        }
     id--;
+    //запись значения макроса
     memset( config.macro_alt[id], 0x00, sizeof( config.macro_alt[id] ) );
     if ( strlen( GetParamVal( IND_PARAM2 ) ) )
         strcpy( config.macro_alt[id], GetParamVal( IND_PARAM2 ) );
+    if ( cnt_par == 3 ) {
+        UartSendStr( (char *)msg_ok );
+        DataSendStr( (char *)msg_mac_ok );
+        return;
+       }
     //сохранение параметра
     if ( strcasecmp( GetParamVal( IND_PARAM3 ), "save" ) == 0 ) {
         stat = ConfigSave();
         sprintf( buffer, msg_save_par, FlashDescErr( stat ) );
         UartSendStr( buffer );
+        if ( stat == FLASH_COMPLETE ) 
+            DataSendStr( (char *)msg_mac_ok );
+        else DataSendStr( (char *)msg_mac_err );
        }
-    else UartSendStr( (char *)msg_ok );
+    else {
+        UartSendStr( (char *)msg_err_param );
+        DataSendStr( (char *)msg_mac_err );
+       }
+ }
+
+//*************************************************************************************************
+// Сохранение макроса CTRL + Fn
+//-------------------------------------------------------------------------------------------------
+// uint8_t cnt_par - кол-во параметров
+//*************************************************************************************************
+static void CmndMacroCtrl( uint8_t cnt_par ) {
+
+    uint8_t id;
+    uint32_t stat;
+    
+    //проверка кол-ва параметров
+    if ( cnt_par < 2 ) {
+        UartSendStr( (char *)msg_err_param );
+        return;
+       }
+    //проверка на допустимое значение индекса макроса
+    id = atoi( GetParamVal( IND_PARAM1 ) );
+    if ( !id || id > MACROS_CNT ) {
+        UartSendStr( (char *)msg_err_param );
+        DataSendStr( (char *)msg_mac_err );
+        return;
+       }
+    id--;
+    //запись значения макроса
+    memset( config.macro_ctrl[id], 0x00, sizeof( config.macro_ctrl[id] ) );
+    if ( strlen( GetParamVal( IND_PARAM2 ) ) )
+        strcpy( config.macro_ctrl[id], GetParamVal( IND_PARAM2 ) );
+    if ( cnt_par == 3 ) {
+        UartSendStr( (char *)msg_ok );
+        DataSendStr( (char *)msg_mac_ok );
+        return;
+       }
+    //сохранение параметра
+    if ( strcasecmp( GetParamVal( IND_PARAM3 ), "save" ) == 0 ) {
+        stat = ConfigSave();
+        sprintf( buffer, msg_save_par, FlashDescErr( stat ) );
+        UartSendStr( buffer );
+        if ( stat == FLASH_COMPLETE ) 
+            DataSendStr( (char *)msg_mac_ok );
+        else DataSendStr( (char *)msg_mac_err );
+       }
+    else {
+        UartSendStr( (char *)msg_err_param );
+        DataSendStr( (char *)msg_mac_err );
+       }
  }
 
 //*************************************************************************************************
@@ -338,19 +407,9 @@ static void CmndMacroAlt( uint8_t cnt_par ) {
 //*************************************************************************************************
 static void CmndConfig( uint8_t cnt_par ) {
 
-    uint8_t i;
-    
     sprintf( buffer, "Data port speed: %u\r\n", config.uart_speed );
     UartSendStr( buffer );
-    for ( i = 0; i < MACROS_CNT; i++ ) {
-        sprintf( buffer, "  Macro CTRL %02u: %s\r\n", i + 1, config.macro_ctrl[i] );
-        UartSendStr( buffer );
-       }
-    UartSendStr( (char *)msg_crlr );
-    for ( i = 0; i < MACROS_CNT; i++ ) {
-        sprintf( buffer, "  Macro  ALT %02u: %s\r\n", i + 1, config.macro_alt[i] );
-        UartSendStr( buffer );
-       }
+    CmndMacro( 0 );
  }
 
 //*********************************************************************************************
@@ -389,7 +448,7 @@ static void CmndTask( uint8_t cnt_par ) {
  }
 
 //*************************************************************************************************
-// Вывод номера и даты версий: FirmWare, RTOS, HAL
+// Вывод номера и даты версий
 //-------------------------------------------------------------------------------------------------
 // uint8_t cnt_par - кол-во параметров
 //*************************************************************************************************
@@ -402,7 +461,6 @@ static void CmndVersion( uint8_t cnt_par ) {
     //источник перезапуска контроллера
     sprintf( buffer, "Source reset: ......... %s\r\n", ResetSrcDesc( reset_flg ) );
     UartSendStr( buffer );
-
     sprintf( buffer, "FirmWare version: ..... %s\r\n", FWVersion( GetFwVersion() ) );
     UartSendStr( buffer );
     sprintf( buffer, "FirmWare date build: .. %s\r\n", FWDate( GetFwDate() ) );
@@ -415,6 +473,18 @@ static void CmndVersion( uint8_t cnt_par ) {
              RCC_Clocks.SYSCLK_Frequency, RCC_Clocks.HCLK_Frequency, RCC_Clocks.PCLK1_Frequency, RCC_Clocks.PCLK2_Frequency, RCC_Clocks.ADCCLK_Frequency );
     UartSendStr( buffer );
     #endif
+}
+
+//*************************************************************************************************
+// Вывод номера и даты версий для LCD терминала
+//-------------------------------------------------------------------------------------------------
+// uint8_t cnt_par - кол-во параметров
+//*************************************************************************************************
+static void CmndFirmWare( uint8_t cnt_par ) {
+
+    sprintf( buffer, "$ %s %s %s\r\n", FWVersion( GetFwVersion() ), FWDate( GetFwDate() ), FWTime( GetFwTime() ) );
+    UartSendStr( buffer );
+    DataSendStr( buffer );
 }
 
 //*************************************************************************************************
